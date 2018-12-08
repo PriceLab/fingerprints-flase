@@ -1,0 +1,76 @@
+import logging.config
+import sys
+import logging
+sys.path.append('/')
+
+from flask import Flask, Blueprint
+from flask import render_template
+from flask import jsonify
+from app import settings
+from app.api.endpoints.fingerprints import ns as fingerprints
+from app.api.restplus import api
+from app.database import db
+from logging.handlers import RotatingFileHandler
+
+
+# this structure was ripped off from
+# http://michal.karzynski.pl/blog/2016/06/19/building-beautiful-restful-apis-using-flask-swagger-ui-flask-restplus/
+
+
+
+app = Flask(__name__)
+logging.config.fileConfig('logging.conf')
+log = logging.getLogger(__name__)
+
+def configure_app(flask_app):
+    flask_app.config['SERVER_NAME'] = settings.FLASK_SERVER_NAME
+    flask_app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI
+    flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = settings.SQLALCHEMY_TRACK_MODIFICATIONS
+    flask_app.config['SWAGGER_UI_DOC_EXPANSION'] = settings.RESTPLUS_SWAGGER_UI_DOC_EXPANSION
+    flask_app.config['RESTPLUS_VALIDATE'] = settings.RESTPLUS_VALIDATE
+    flask_app.config['RESTPLUS_MASK_SWAGGER'] = settings.RESTPLUS_MASK_SWAGGER
+    flask_app.config['ERROR_404_HELP'] = settings.RESTPLUS_ERROR_404_HELP
+
+
+def initialize_app(app):
+    log.info("Test log")
+    configure_app(app)
+    blueprint = Blueprint('api', __name__, url_prefix='/api')
+    api.init_app(blueprint)
+    api.add_namespace(fingerprints)
+    app.register_blueprint(blueprint)
+    db.init_app(app)
+    log.info("finished initialize")
+
+initialize_app(app)
+
+
+@app.errorhandler
+def default_error_handler(e):
+    message = 'An unhandled exception occurred.'
+    log.exception(message)
+    return jsonify({'error': {'type': str(type(e)), 
+                    'message': message,
+                    'code': 500
+                    }}), 500
+
+
+@app.errorhandler(404)
+def default_404_error_handler(e):
+    message = 'An unhandled exception occurred.'
+    log.exception(message)
+    return jsonify({'error': {'type': '404 error', 
+                    'message': str(e),
+                    'code':404
+                    }}), 404
+
+
+@app.route("/")
+@app.route("/index.html")
+def index():
+    return render_template('index.html')
+    return """Rest"""
+
+if __name__ == '__main__':
+    log.info('>>>>> Starting development server at http://{}/api/ <<<<<'.format(app.config['SERVER_NAME']))
+    app.run(host='0.0.0.0', debug=True, port=80)
