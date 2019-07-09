@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+        <link rel="stylesheet" href="static/bootstrap-4.0.0-alpha.6-dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="static/bootstrap-4.0.0-alpha.6-dist/css/bootstrap-grid.min.css"/>
+        <link rel="stylesheet" href="static/bootstrap-4.0.0-alpha.6-dist/css/bootstrap-reboot.min.css"/>
+    <title>{% block title %}{% endblock %} - HANNAH</title>
+    {% endblock %}
+</head>
+<body>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+        {% endblock %}
+    </div>
+    <script src="static/jquery/jquery-jquery-3.3.1.min.js">
+    <script src="static/popper/popper.min.js">
+    <script src="static/bootstrap-4.0.0-alpha.6-dist/js/bootstrap.min.js"/>
+</body>
+</html>
